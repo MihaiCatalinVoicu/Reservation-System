@@ -1,4 +1,39 @@
 package com.coworking.reservationsystem.model.entity;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "spaces")
+@Getter
+@Setter
 public class Space {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull
+    @Size(max = 100, message = "Name of space can not exceed 100 characters.")
+    private String name;
+
+    @NotNull
+    @Size(max = 500, message = "Description can not exceed 500 characters.")
+    private String description;
+
+    @NotNull
+    @Min(value = 1, message = "Capacity must be at least 1")
+    private Integer capacity;
+
+    @NotNull
+    private Double pricePerHour;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
+    @NotNull
+    private Location location;
 }

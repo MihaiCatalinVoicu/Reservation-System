@@ -1,23 +1,21 @@
 package com.coworking.reservationsystem.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table
-@Getter
-@Setter
+@Table(name = "users")
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true,nullable = false)
-    private String email;
 
     @Column(nullable = false)
     private String firstName;
@@ -25,6 +23,9 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 }
