@@ -8,6 +8,7 @@ public interface SpaceService {
     SpaceDto createSpace(SpaceDto spaceDto);
     SpaceDto getSpaceById(Long id);
     List<SpaceDto> getAllSpaces();
+    List<SpaceDto> getSpacesByLocationId(Long locationId);
     SpaceDto updateSpace(Long id, SpaceDto spaceDto);
     void deleteSpace(Long id);
 }

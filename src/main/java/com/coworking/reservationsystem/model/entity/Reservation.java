@@ -1,5 +1,7 @@
 package com.coworking.reservationsystem.model.entity;
 
+import com.coworking.reservationsystem.model.dto.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -20,11 +22,13 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull
+    @JsonIgnore
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "space_id", nullable = false)
     @NotNull
+    @JsonIgnore
     private Space space;
 
     @NotNull
@@ -36,11 +40,21 @@ public class Reservation {
     @NotNull
     private Double totalPrice;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.PENDING;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    public void validateTimeRange() {
+        if (endTime.isBefore(startTime)) {
+            throw new IllegalArgumentException("End time must be after start time");
+        }
     }
 }

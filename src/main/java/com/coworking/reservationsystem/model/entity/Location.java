@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -29,4 +30,7 @@ public class Location {
     @NotNull
     @Size(max = 50, message = "Name of the city can not exceed 50 characters.")
     private String city;
+
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Space> spaces = new ArrayList<>();
 }

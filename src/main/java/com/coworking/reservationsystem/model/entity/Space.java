@@ -1,11 +1,15 @@
 package com.coworking.reservationsystem.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "spaces")
@@ -35,5 +39,14 @@ public class Space {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id", nullable = false)
     @NotNull
+    @JsonIgnore
     private Location location;
+
+    @OneToMany(mappedBy = "space", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Reservation> reservations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "space", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Availability> availabilities = new ArrayList<>();
 }

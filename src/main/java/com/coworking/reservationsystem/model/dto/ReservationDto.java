@@ -27,6 +27,9 @@ public record ReservationDto(
         @Positive
         Double totalPrice,
 
+        @NotNull
+        Status status,
+
         LocalDateTime createdAt
 ) {
     public static class Mapper {
@@ -38,6 +41,7 @@ public record ReservationDto(
                     reservation.getStartTime(),
                     reservation.getEndTime(),
                     reservation.getTotalPrice(),
+                    reservation.getStatus(),
                     reservation.getCreatedAt()
             );
         }
@@ -47,6 +51,7 @@ public record ReservationDto(
             reservation.setStartTime(dto.startTime());
             reservation.setEndTime(dto.endTime());
             reservation.setTotalPrice(dto.totalPrice());
+            reservation.setStatus(dto.status());
             reservation.setCreatedAt(LocalDateTime.now());
             return reservation;
         }

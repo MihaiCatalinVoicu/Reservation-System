@@ -1,7 +1,9 @@
 package com.coworking.reservationsystem.controller;
 
 import com.coworking.reservationsystem.model.dto.LocationDto;
+import com.coworking.reservationsystem.model.dto.SpaceDto;
 import com.coworking.reservationsystem.service.LocationService;
+import com.coworking.reservationsystem.service.SpaceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import java.util.List;
 public class LocationController {
 
     private final LocationService locationService;
+    private final SpaceService spaceService;
 
     @PostMapping
     public ResponseEntity<LocationDto> createLocation(@Valid @RequestBody LocationDto locationDto) {
@@ -33,6 +36,12 @@ public class LocationController {
     public ResponseEntity<List<LocationDto>> getAllLocations() {
         List<LocationDto> locations = locationService.getAllLocations();
         return ResponseEntity.ok(locations);
+    }
+
+    @GetMapping("/{id}/spaces")
+    public ResponseEntity<List<SpaceDto>> getSpacesByLocationId(@PathVariable Long id) {
+        List<SpaceDto> spaces = spaceService.getSpacesByLocationId(id);
+        return ResponseEntity.ok(spaces);
     }
 
     @PutMapping("/{id}")

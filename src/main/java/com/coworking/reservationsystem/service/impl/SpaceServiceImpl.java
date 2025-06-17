@@ -53,6 +53,16 @@ public class SpaceServiceImpl implements SpaceService {
     }
 
     @Override
+    public List<SpaceDto> getSpacesByLocationId(Long locationId) {
+        if (!locationRepository.existsById(locationId)) {
+            throw new ResourceNotFoundException("Location not found with id: " + locationId);
+        }
+        return spaceRepository.findByLocationId(locationId).stream()
+                .map(SpaceDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public SpaceDto updateSpace(Long id, SpaceDto spaceDto) {
         Space space = spaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Space not found with id: " + id));

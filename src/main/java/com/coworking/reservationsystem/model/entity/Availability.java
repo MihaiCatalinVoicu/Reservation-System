@@ -1,5 +1,6 @@
 package com.coworking.reservationsystem.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -20,6 +21,7 @@ public class Availability {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "space_id", nullable = false)
     @NotNull
+    @JsonIgnore
     private Space space;
 
     @NotNull

@@ -32,6 +32,16 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getAllReservations());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReservationDto>> getReservationsByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(reservationService.getReservationsByUserId(userId));
+    }
+
+    @GetMapping("/space/{spaceId}")
+    public ResponseEntity<List<ReservationDto>> getReservationsBySpaceId(@PathVariable Long spaceId) {
+        return ResponseEntity.ok(reservationService.getReservationsBySpaceId(spaceId));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ReservationDto> updateReservation(@PathVariable Long id, @Valid @RequestBody ReservationDto reservationDto) {
         return ResponseEntity.ok(reservationService.updateReservation(id, reservationDto));
