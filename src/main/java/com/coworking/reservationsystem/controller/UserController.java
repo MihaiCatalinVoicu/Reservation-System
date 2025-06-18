@@ -1,5 +1,6 @@
 package com.coworking.reservationsystem.controller;
 
+import com.coworking.reservationsystem.model.dto.CreateUserRequest;
 import com.coworking.reservationsystem.model.dto.UserDto;
 import com.coworking.reservationsystem.service.UserService;
 import jakarta.validation.Valid;
@@ -18,8 +19,8 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
-        UserDto createdUser = userService.createUser(userDto);
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
+        UserDto createdUser = userService.createUser(request.getUser(), request.getPassword());
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
