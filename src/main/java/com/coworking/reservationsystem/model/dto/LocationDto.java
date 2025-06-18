@@ -17,7 +17,9 @@ public record LocationDto(
 
         @NotBlank(message = "City is mandatory")
         @Size(max = 50, message = "Name of the city can not exceed 50 characters.")
-        String city
+        String city,
+        
+        Long tenantId
 ) {
     public static class Mapper {
         public static LocationDto toDto(Location location) {
@@ -25,7 +27,8 @@ public record LocationDto(
                     location.getId(),
                     location.getName(),
                     location.getAddress(),
-                    location.getCity()
+                    location.getCity(),
+                    location.getTenant() != null ? location.getTenant().getId() : null
             );
         }
 

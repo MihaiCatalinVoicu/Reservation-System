@@ -45,6 +45,11 @@
         @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
         private List<String> roles;
 
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "tenant_id", nullable = false)
+        @JsonIgnore
+        private Tenant tenant;
+
         @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
         @JsonIgnore
         private List<Reservation> reservations = new ArrayList<>();

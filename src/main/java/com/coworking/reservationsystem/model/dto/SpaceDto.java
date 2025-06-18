@@ -25,7 +25,9 @@ public record SpaceDto(
 
         @NotNull(message = "Price per hour is mandatory")
         @Min(value = 0, message = "Price per hour must be non-negative")
-        Double pricePerHour
+        Double pricePerHour,
+        
+        Long tenantId
 ) {
     public static class Mapper {
         public static SpaceDto toDto(Space space) {
@@ -35,7 +37,8 @@ public record SpaceDto(
                     space.getDescription(),
                     space.getCapacity(),
                     space.getLocation().getId(),
-                    space.getPricePerHour()
+                    space.getPricePerHour(),
+                    space.getTenant() != null ? space.getTenant().getId() : null
             );
         }
 

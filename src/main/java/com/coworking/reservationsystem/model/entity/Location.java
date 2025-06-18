@@ -31,6 +31,10 @@ public class Location {
     @Size(max = 50, message = "Name of the city can not exceed 50 characters.")
     private String city;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
+
     @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Space> spaces = new ArrayList<>();
 }

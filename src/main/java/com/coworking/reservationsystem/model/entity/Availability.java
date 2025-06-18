@@ -24,6 +24,11 @@ public class Availability {
     @JsonIgnore
     private Space space;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    @JsonIgnore
+    private Tenant tenant;
+
     @NotNull
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;

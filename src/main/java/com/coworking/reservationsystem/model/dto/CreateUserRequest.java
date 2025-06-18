@@ -13,4 +13,7 @@ public class CreateUserRequest {
     @NotNull
     @Valid
     private PasswordDto password;
+    
+    @NotNull
+    private Long tenantId;
 } 

@@ -20,7 +20,21 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
-        UserDto createdUser = userService.createUser(request.getUser(), request.getPassword());
+        // Set tenantId in userDto if provided in request
+        UserDto userDto = request.getUser();
+        if (request.getTenantId() != null) {
+            userDto = new UserDto(
+                    userDto.id(),
+                    userDto.email(),
+                    userDto.firstName(),
+                    userDto.lastName(),
+                    userDto.createdAt(),
+                    userDto.roles(),
+                    request.getTenantId()
+            );
+        }
+        
+        UserDto createdUser = userService.createUser(userDto, request.getPassword());
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
@@ -33,6 +47,12 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
         List<UserDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<List<UserDto>> getUsersByTenantId(@PathVariable Long tenantId) {
+        List<UserDto> users = userService.getUsersByTenantId(tenantId);
         return ResponseEntity.ok(users);
     }
 

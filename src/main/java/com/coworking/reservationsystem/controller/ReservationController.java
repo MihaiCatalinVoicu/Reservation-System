@@ -1,5 +1,7 @@
 package com.coworking.reservationsystem.controller;
 
+import com.coworking.reservationsystem.exception.ResourceNotFoundException;
+import com.coworking.reservationsystem.exception.ValidationException;
 import com.coworking.reservationsystem.model.dto.ReservationDto;
 import com.coworking.reservationsystem.service.ReservationService;
 import jakarta.validation.Valid;
@@ -19,12 +21,20 @@ public class ReservationController {
 
     @PostMapping
     public ResponseEntity<ReservationDto> createReservation(@Valid @RequestBody ReservationDto reservationDto) {
-        return new ResponseEntity<>(reservationService.createReservation(reservationDto), HttpStatus.CREATED);
+        try {
+            return new ResponseEntity<>(reservationService.createReservation(reservationDto), HttpStatus.CREATED);
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ReservationDto> getReservationById(@PathVariable Long id) {
-        return ResponseEntity.ok(reservationService.getReservationById(id));
+        try {
+            return ResponseEntity.ok(reservationService.getReservationById(id));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping
@@ -44,12 +54,44 @@ public class ReservationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ReservationDto> updateReservation(@PathVariable Long id, @Valid @RequestBody ReservationDto reservationDto) {
-        return ResponseEntity.ok(reservationService.updateReservation(id, reservationDto));
+        try {
+            return ResponseEntity.ok(reservationService.updateReservation(id, reservationDto));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
-        reservationService.deleteReservation(id);
-        return ResponseEntity.noContent().build();
+        try {
+            reservationService.deleteReservation(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<ReservationDto> confirmReservation(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(reservationService.confirmReservation(id));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<ReservationDto> cancelReservation(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(reservationService.cancelReservation(id));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

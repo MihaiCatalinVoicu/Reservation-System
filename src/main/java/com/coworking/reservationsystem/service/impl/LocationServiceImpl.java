@@ -3,7 +3,9 @@ package com.coworking.reservationsystem.service.impl;
 import com.coworking.reservationsystem.exception.ResourceNotFoundException;
 import com.coworking.reservationsystem.model.dto.LocationDto;
 import com.coworking.reservationsystem.model.entity.Location;
+import com.coworking.reservationsystem.model.entity.Tenant;
 import com.coworking.reservationsystem.repository.LocationRepository;
+import com.coworking.reservationsystem.repository.TenantRepository;
 import com.coworking.reservationsystem.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,10 +18,23 @@ import java.util.stream.Collectors;
 public class LocationServiceImpl implements LocationService {
 
     private final LocationRepository locationRepository;
+    private final TenantRepository tenantRepository;
 
     @Override
     public LocationDto createLocation(LocationDto locationDto) {
-        Location location = LocationDto.Mapper.toEntity(locationDto);
+        // Validate tenant exists
+        Tenant tenant = null;
+        if (locationDto.tenantId() != null) {
+            tenant = tenantRepository.findById(locationDto.tenantId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + locationDto.tenantId()));
+        }
+
+        Location location = new Location();
+        location.setName(locationDto.name());
+        location.setAddress(locationDto.address());
+        location.setCity(locationDto.city());
+        location.setTenant(tenant);
+        
         location = locationRepository.save(location);
         return LocationDto.Mapper.toDto(location);
     }
@@ -55,5 +70,12 @@ public class LocationServiceImpl implements LocationService {
             throw new ResourceNotFoundException("Location not found with id: " + id);
         }
         locationRepository.deleteById(id);
+    }
+
+    @Override
+    public List<LocationDto> getLocationsByTenantId(Long tenantId) {
+        return locationRepository.findByTenantId(tenantId).stream()
+                .map(LocationDto.Mapper::toDto)
+                .toList();
     }
 } 

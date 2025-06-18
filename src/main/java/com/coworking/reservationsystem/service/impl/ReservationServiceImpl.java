@@ -32,17 +32,20 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public ReservationDto createReservation(ReservationDto reservationDto) {
-        validateReservationDates(reservationDto);
-        checkForOverlappingReservations(reservationDto);
-
+        // First check if resources exist
         User user = userRepository.findById(reservationDto.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Space space = spaceRepository.findById(reservationDto.spaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Space not found"));
 
+        // Then validate dates and check for overlaps
+        validateReservationDates(reservationDto);
+        checkForOverlappingReservations(reservationDto);
+
         Reservation reservation = ReservationDto.Mapper.toEntity(reservationDto);
         reservation.setUser(user);
         reservation.setSpace(space);
+        reservation.setTenant(user.getTenant());
         reservation.setStatus(Status.PENDING);
 
         return ReservationDto.Mapper.toDto(reservationRepository.save(reservation));

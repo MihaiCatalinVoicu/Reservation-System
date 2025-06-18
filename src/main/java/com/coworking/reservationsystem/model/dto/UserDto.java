@@ -20,7 +20,8 @@ public record UserDto(
         @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
         String lastName,
         LocalDateTime createdAt,
-        List<String> roles
+        List<String> roles,
+        Long tenantId
 ) {
     public static class Mapper {
         public static UserDto toDto(User user) {
@@ -30,7 +31,8 @@ public record UserDto(
                     user.getFirstName(),
                     user.getLastName(),
                     user.getCreatedAt(),
-                    user.getRoles()
+                    user.getRoles(),
+                    user.getTenant() != null ? user.getTenant().getId() : null
             );
         }
 

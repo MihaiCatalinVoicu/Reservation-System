@@ -4,7 +4,9 @@ import com.coworking.reservationsystem.exception.ResourceNotFoundException;
 import com.coworking.reservationsystem.exception.ValidationException;
 import com.coworking.reservationsystem.model.dto.PasswordDto;
 import com.coworking.reservationsystem.model.dto.UserDto;
+import com.coworking.reservationsystem.model.entity.Tenant;
 import com.coworking.reservationsystem.model.entity.User;
+import com.coworking.reservationsystem.repository.TenantRepository;
 import com.coworking.reservationsystem.repository.UserRepository;
 import com.coworking.reservationsystem.service.UserService;
 import jakarta.annotation.PostConstruct;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -32,6 +35,13 @@ public class UserServiceImpl implements UserService {
 
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             user.setRoles(List.of("ROLE_USER"));
+        }
+
+        // Set tenant if tenantId is provided
+        if (userDto.tenantId() != null) {
+            Tenant tenant = tenantRepository.findById(userDto.tenantId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + userDto.tenantId()));
+            user.setTenant(tenant);
         }
 
         user = userRepository.save(user);
@@ -55,6 +65,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<UserDto> getUsersByTenantId(Long tenantId) {
+        return userRepository.findByTenantId(tenantId).stream()
+                .map(UserDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public UserDto updateUser(Long id, UserDto userDto) {
         User user = userRepository.findById(id)
@@ -62,6 +80,14 @@ public class UserServiceImpl implements UserService {
         user.setEmail(userDto.email());
         user.setFirstName(userDto.firstName());
         user.setLastName(userDto.lastName());
+        
+        // Update tenant if tenantId is provided
+        if (userDto.tenantId() != null) {
+            Tenant tenant = tenantRepository.findById(userDto.tenantId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with id: " + userDto.tenantId()));
+            user.setTenant(tenant);
+        }
+        
         user = userRepository.save(user);
         return UserDto.Mapper.toDto(user);
     }
@@ -91,15 +117,22 @@ public class UserServiceImpl implements UserService {
 
     @PostConstruct
     public void testCreateUser() {
-        UserDto userDto = new UserDto(
-                null,
-                "test3@example.com",
-                "Test3",
-                "User3",
-                LocalDateTime.now(),
-                List.of("ROLE_USER")
-        );
-        PasswordDto passwordDto = new PasswordDto("Test123!@#");
-        createUser(userDto, passwordDto);
+        // Only create test user if no users exist and if we have a tenant
+        if (userRepository.count() == 0 && tenantRepository.count() > 0) {
+            // Get the first available tenant
+            Tenant firstTenant = tenantRepository.findAll().get(0);
+            
+            UserDto userDto = new UserDto(
+                    null,
+                    "test3@example.com",
+                    "Test3",
+                    "User3",
+                    LocalDateTime.now(),
+                    List.of("ROLE_USER"),
+                    firstTenant.getId()
+            );
+            PasswordDto passwordDto = new PasswordDto("Test123!@#");
+            createUser(userDto, passwordDto);
+        }
     }
 } 

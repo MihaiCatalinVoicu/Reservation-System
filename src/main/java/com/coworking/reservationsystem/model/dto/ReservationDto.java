@@ -30,7 +30,9 @@ public record ReservationDto(
         @NotNull
         Status status,
 
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        
+        Long tenantId
 ) {
     public static class Mapper {
         public static ReservationDto toDto(Reservation reservation) {
@@ -42,7 +44,8 @@ public record ReservationDto(
                     reservation.getEndTime(),
                     reservation.getTotalPrice(),
                     reservation.getStatus(),
-                    reservation.getCreatedAt()
+                    reservation.getCreatedAt(),
+                    reservation.getTenant() != null ? reservation.getTenant().getId() : null
             );
         }
 

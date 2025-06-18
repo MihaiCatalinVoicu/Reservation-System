@@ -31,6 +31,11 @@ public class Reservation {
     @JsonIgnore
     private Space space;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    @JsonIgnore
+    private Tenant tenant;
+
     @NotNull
     private LocalDateTime startTime;
 

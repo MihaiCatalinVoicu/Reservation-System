@@ -18,7 +18,9 @@ public record AvailabilityDto(
         @NotNull(message = "End time is mandatory")
         LocalDateTime endTime,
         
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        
+        Long tenantId
 ) {
     public static class Mapper {
         public static AvailabilityDto toDto(Availability availability) {
@@ -27,7 +29,8 @@ public record AvailabilityDto(
                     availability.getSpace().getId(),
                     availability.getStartTime(),
                     availability.getEndTime(),
-                    availability.getCreatedAt()
+                    availability.getCreatedAt(),
+                    availability.getTenant() != null ? availability.getTenant().getId() : null
             );
         }
 
