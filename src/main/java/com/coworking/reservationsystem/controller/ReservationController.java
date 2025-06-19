@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/reservations")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ReservationController {
 
     private final ReservationService reservationService;
@@ -42,9 +43,9 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getAllReservations());
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ReservationDto>> getReservationsByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(reservationService.getReservationsByUserId(userId));
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<ReservationDto>> getReservationsByCustomerId(@PathVariable Long customerId) {
+        return ResponseEntity.ok(reservationService.getReservationsByCustomerId(customerId));
     }
 
     @GetMapping("/space/{spaceId}")

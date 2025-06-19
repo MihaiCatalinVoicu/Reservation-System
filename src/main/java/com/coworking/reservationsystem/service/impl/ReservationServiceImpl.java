@@ -4,9 +4,11 @@ import com.coworking.reservationsystem.exception.ResourceNotFoundException;
 import com.coworking.reservationsystem.exception.ValidationException;
 import com.coworking.reservationsystem.model.dto.ReservationDto;
 import com.coworking.reservationsystem.model.dto.Status;
+import com.coworking.reservationsystem.model.entity.Customer;
 import com.coworking.reservationsystem.model.entity.Reservation;
 import com.coworking.reservationsystem.model.entity.Space;
 import com.coworking.reservationsystem.model.entity.User;
+import com.coworking.reservationsystem.repository.CustomerRepository;
 import com.coworking.reservationsystem.repository.ReservationRepository;
 import com.coworking.reservationsystem.repository.SpaceRepository;
 import com.coworking.reservationsystem.repository.UserRepository;
@@ -27,13 +29,16 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
     private final SpaceRepository spaceRepository;
 
     @Override
     @Transactional
     public ReservationDto createReservation(ReservationDto reservationDto) {
         // First check if resources exist
-        User user = userRepository.findById(reservationDto.userId())
+        Customer customer = customerRepository.findById(reservationDto.customerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+        User createdByUser = userRepository.findById(reservationDto.createdByUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Space space = spaceRepository.findById(reservationDto.spaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Space not found"));
@@ -43,9 +48,10 @@ public class ReservationServiceImpl implements ReservationService {
         checkForOverlappingReservations(reservationDto);
 
         Reservation reservation = ReservationDto.Mapper.toEntity(reservationDto);
-        reservation.setUser(user);
+        reservation.setCustomer(customer);
+        reservation.setCreatedByUser(createdByUser);
         reservation.setSpace(space);
-        reservation.setTenant(user.getTenant());
+        reservation.setTenant(customer.getTenant());
         reservation.setStatus(Status.PENDING);
 
         return ReservationDto.Mapper.toDto(reservationRepository.save(reservation));
@@ -76,16 +82,16 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReservationDto> getReservationsByUserId(Long userId) {
-        return reservationRepository.findByUserId(userId).stream()
+    public List<ReservationDto> getReservationsByCustomerId(Long customerId) {
+        return reservationRepository.findByCustomerId(customerId).stream()
                 .map(ReservationDto.Mapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReservationDto> getReservationsByUserId(Long userId, Pageable pageable) {
-        return reservationRepository.findByUserId(userId, pageable)
+    public Page<ReservationDto> getReservationsByCustomerId(Long customerId, Pageable pageable) {
+        return reservationRepository.findByCustomerId(customerId, pageable)
                 .map(ReservationDto.Mapper::toDto);
     }
 
@@ -117,6 +123,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setEndTime(reservationDto.endTime());
         reservation.setTotalPrice(reservationDto.totalPrice());
         reservation.setStatus(reservationDto.status());
+        reservation.setNotes(reservationDto.notes());
 
         return ReservationDto.Mapper.toDto(reservationRepository.save(reservation));
     }

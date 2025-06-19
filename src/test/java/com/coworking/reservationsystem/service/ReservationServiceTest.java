@@ -5,6 +5,7 @@ import com.coworking.reservationsystem.exception.ValidationException;
 import com.coworking.reservationsystem.model.dto.ReservationDto;
 import com.coworking.reservationsystem.model.dto.Status;
 import com.coworking.reservationsystem.model.entity.*;
+import com.coworking.reservationsystem.repository.CustomerRepository;
 import com.coworking.reservationsystem.repository.ReservationRepository;
 import com.coworking.reservationsystem.repository.SpaceRepository;
 import com.coworking.reservationsystem.repository.UserRepository;
@@ -35,6 +36,9 @@ class ReservationServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private CustomerRepository customerRepository;
+
+    @Mock
     private SpaceRepository spaceRepository;
 
     @InjectMocks
@@ -42,6 +46,7 @@ class ReservationServiceTest {
 
     private Tenant testTenant;
     private User testUser;
+    private Customer testCustomer;
     private Space testSpace;
     private Reservation testReservation;
     private ReservationDto testReservationDto;
@@ -50,30 +55,35 @@ class ReservationServiceTest {
     void setUp() {
         testTenant = new Tenant();
         testTenant.setId(1L);
-        testTenant.setName("Test Hotel");
-        testTenant.setSubdomain("test-hotel");
+        testTenant.setName("Test Tenant");
 
         testUser = new User();
         testUser.setId(1L);
-        testUser.setEmail("user@test.com");
+        testUser.setEmail("test@example.com");
         testUser.setFirstName("John");
         testUser.setLastName("Doe");
         testUser.setTenant(testTenant);
 
+        testCustomer = new Customer();
+        testCustomer.setId(1L);
+        testCustomer.setFirstName("Jane");
+        testCustomer.setLastName("Smith");
+        testCustomer.setPhone("+40123456789");
+        testCustomer.setTenant(testTenant);
+
         testSpace = new Space();
         testSpace.setId(1L);
-        testSpace.setName("Conference Room A");
-        testSpace.setCapacity(50);
+        testSpace.setName("Test Space");
         testSpace.setTenant(testTenant);
 
-        // Use fixed dates to avoid validation issues
-        LocalDateTime startTime = LocalDateTime.of(2025, 12, 25, 10, 0); // 10:00 AM
-        LocalDateTime endTime = LocalDateTime.of(2025, 12, 25, 12, 0);   // 12:00 PM
-        LocalDateTime createdAt = LocalDateTime.of(2025, 12, 24, 15, 0); // 3:00 PM previous day
+        LocalDateTime startTime = LocalDateTime.now().plusHours(1);
+        LocalDateTime endTime = LocalDateTime.now().plusHours(3);
+        LocalDateTime createdAt = LocalDateTime.now();
 
         testReservation = new Reservation();
         testReservation.setId(1L);
-        testReservation.setUser(testUser);
+        testReservation.setCustomer(testCustomer);
+        testReservation.setCreatedByUser(testUser);
         testReservation.setSpace(testSpace);
         testReservation.setStartTime(startTime);
         testReservation.setEndTime(endTime);
@@ -83,18 +93,22 @@ class ReservationServiceTest {
         testReservationDto = new ReservationDto(
                 1L,
                 1L, // spaceId
-                1L, // userId
+                1L, // customerId
+                1L, // createdByUserId
                 startTime,
                 endTime,
                 100.0, // totalPrice
                 Status.CONFIRMED,
+                "Test notes", // notes
                 createdAt, // createdAt
+                createdAt, // updatedAt
                 1L // tenantId
         );
     }
 
     @Test
     void createReservation_ValidReservation_ReturnsCreatedReservation() {
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(spaceRepository.findById(1L)).thenReturn(Optional.of(testSpace));
         when(reservationRepository.findOverlappingReservations(anyLong(), any(), any()))
@@ -109,7 +123,19 @@ class ReservationServiceTest {
     }
 
     @Test
+    void createReservation_CustomerNotFound_ThrowsResourceNotFoundException() {
+        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            reservationService.createReservation(testReservationDto);
+        });
+
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
     void createReservation_UserNotFound_ThrowsResourceNotFoundException() {
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> {
@@ -121,6 +147,7 @@ class ReservationServiceTest {
 
     @Test
     void createReservation_SpaceNotFound_ThrowsResourceNotFoundException() {
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(spaceRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -133,6 +160,7 @@ class ReservationServiceTest {
 
     @Test
     void createReservation_OverlappingReservation_ThrowsValidationException() {
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(spaceRepository.findById(1L)).thenReturn(Optional.of(testSpace));
         when(reservationRepository.findOverlappingReservations(anyLong(), any(), any()))
@@ -179,15 +207,15 @@ class ReservationServiceTest {
     }
 
     @Test
-    void getReservationsByUserId_ReturnsUserReservations() {
+    void getReservationsByCustomerId_ReturnsCustomerReservations() {
         List<Reservation> reservations = Arrays.asList(testReservation);
-        when(reservationRepository.findByUserId(1L)).thenReturn(reservations);
+        when(reservationRepository.findByCustomerId(1L)).thenReturn(reservations);
 
-        List<ReservationDto> result = reservationService.getReservationsByUserId(1L);
+        List<ReservationDto> result = reservationService.getReservationsByCustomerId(1L);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).userId());
+        assertEquals(1L, result.get(0).customerId());
     }
 
     @Test

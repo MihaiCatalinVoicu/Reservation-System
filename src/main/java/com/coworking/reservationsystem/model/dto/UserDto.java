@@ -45,4 +45,8 @@ public record UserDto(
             return user;
         }
     }
+
+    public static UserDto fromEntity(User user) {
+        return Mapper.toDto(user);
+    }
 }

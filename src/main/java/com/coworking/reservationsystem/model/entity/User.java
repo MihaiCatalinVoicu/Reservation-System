@@ -8,7 +8,6 @@
     import org.springframework.security.core.userdetails.UserDetails;
 
     import java.time.LocalDateTime;
-    import java.util.ArrayList;
     import java.util.Collection;
     import java.util.List;
     import java.util.stream.Collectors;
@@ -49,10 +48,6 @@
         @JoinColumn(name = "tenant_id", nullable = false)
         @JsonIgnore
         private Tenant tenant;
-
-        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-        @JsonIgnore
-        private List<Reservation> reservations = new ArrayList<>();
 
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {

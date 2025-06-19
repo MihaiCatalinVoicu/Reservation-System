@@ -41,15 +41,19 @@ class ReservationControllerTest {
 
     @BeforeEach
     void setUp() {
+        LocalDateTime now = LocalDateTime.now();
         testReservationDto = new ReservationDto(
                 1L,
                 1L, // spaceId
-                1L, // userId
-                LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusHours(3),
+                1L, // customerId
+                1L, // createdByUserId
+                now.plusHours(1),
+                now.plusHours(3),
                 150.0, // totalPrice
                 Status.CONFIRMED,
-                LocalDateTime.now(), // createdAt
+                "Test notes", // notes
+                now, // createdAt
+                now, // updatedAt
                 1L // tenantId
         );
     }
@@ -63,7 +67,8 @@ class ReservationControllerTest {
                 .content(objectMapper.writeValueAsString(testReservationDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.userId").value(1))
+                .andExpect(jsonPath("$.customerId").value(1))
+                .andExpect(jsonPath("$.createdByUserId").value(1))
                 .andExpect(jsonPath("$.spaceId").value(1))
                 .andExpect(jsonPath("$.status").value("CONFIRMED"))
                 .andExpect(jsonPath("$.tenantId").value(1));
@@ -74,7 +79,7 @@ class ReservationControllerTest {
     @Test
     void createReservation_InvalidReservation_ReturnsBadRequest() throws Exception {
         ReservationDto invalidReservation = new ReservationDto(
-                null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
 
         mockMvc.perform(post("/api/v1/reservations")
@@ -170,16 +175,16 @@ class ReservationControllerTest {
     }
 
     @Test
-    void getReservationsByUser_ReturnsUserReservations() throws Exception {
+    void getReservationsByCustomer_ReturnsCustomerReservations() throws Exception {
         List<ReservationDto> reservations = Arrays.asList(testReservationDto);
-        when(reservationService.getReservationsByUserId(1L)).thenReturn(reservations);
+        when(reservationService.getReservationsByCustomerId(1L)).thenReturn(reservations);
 
-        mockMvc.perform(get("/api/v1/reservations/user/1"))
+        mockMvc.perform(get("/api/v1/reservations/customer/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].userId").value(1));
+                .andExpect(jsonPath("$[0].customerId").value(1));
 
-        verify(reservationService).getReservationsByUserId(1L);
+        verify(reservationService).getReservationsByCustomerId(1L);
     }
 
     @Test

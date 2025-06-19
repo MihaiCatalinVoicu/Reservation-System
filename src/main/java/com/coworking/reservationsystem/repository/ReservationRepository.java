@@ -15,15 +15,15 @@ import java.util.Optional;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-    List<Reservation> findByUserId(Long userId);
-    Page<Reservation> findByUserId(Long userId, Pageable pageable);
+    List<Reservation> findByCustomerId(Long customerId);
+    Page<Reservation> findByCustomerId(Long customerId, Pageable pageable);
     List<Reservation> findBySpaceId(Long spaceId);
     Page<Reservation> findBySpaceId(Long spaceId, Pageable pageable);
     
     // Tenant-based methods
     Optional<Reservation> findByIdAndTenantId(Long id, Long tenantId);
     List<Reservation> findByTenantId(Long tenantId);
-    List<Reservation> findByUserIdAndTenantId(Long userId, Long tenantId);
+    List<Reservation> findByCustomerIdAndTenantId(Long customerId, Long tenantId);
     List<Reservation> findBySpaceIdAndTenantId(Long spaceId, Long tenantId);
     List<Reservation> findByStatusAndTenantId(Status status, Long tenantId);
     

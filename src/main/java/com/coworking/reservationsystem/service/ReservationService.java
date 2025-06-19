@@ -11,8 +11,8 @@ public interface ReservationService {
     ReservationDto getReservationById(Long id);
     List<ReservationDto> getAllReservations();
     Page<ReservationDto> getAllReservations(Pageable pageable);
-    List<ReservationDto> getReservationsByUserId(Long userId);
-    Page<ReservationDto> getReservationsByUserId(Long userId, Pageable pageable);
+    List<ReservationDto> getReservationsByCustomerId(Long customerId);
+    Page<ReservationDto> getReservationsByCustomerId(Long customerId, Pageable pageable);
     List<ReservationDto> getReservationsBySpaceId(Long spaceId);
     Page<ReservationDto> getReservationsBySpaceId(Long spaceId, Pageable pageable);
     ReservationDto updateReservation(Long id, ReservationDto reservationDto);

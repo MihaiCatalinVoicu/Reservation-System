@@ -14,8 +14,11 @@ public record ReservationDto(
         @NotNull(message = "Space ID is mandatory")
         Long spaceId,
 
-        @NotNull(message = "User ID is mandatory")
-        Long userId,
+        @NotNull(message = "Customer ID is mandatory")
+        Long customerId,
+
+        @NotNull(message = "Created by user ID is mandatory")
+        Long createdByUserId,
 
         @NotNull(message = "Start time is mandatory")
         LocalDateTime startTime,
@@ -30,7 +33,11 @@ public record ReservationDto(
         @NotNull
         Status status,
 
+        String notes,
+
         LocalDateTime createdAt,
+        
+        LocalDateTime updatedAt,
         
         Long tenantId
 ) {
@@ -39,12 +46,15 @@ public record ReservationDto(
             return new ReservationDto(
                     reservation.getId(),
                     reservation.getSpace().getId(),
-                    reservation.getUser().getId(),
+                    reservation.getCustomer().getId(),
+                    reservation.getCreatedByUser().getId(),
                     reservation.getStartTime(),
                     reservation.getEndTime(),
                     reservation.getTotalPrice(),
                     reservation.getStatus(),
+                    reservation.getNotes(),
                     reservation.getCreatedAt(),
+                    reservation.getUpdatedAt(),
                     reservation.getTenant() != null ? reservation.getTenant().getId() : null
             );
         }
@@ -55,7 +65,9 @@ public record ReservationDto(
             reservation.setEndTime(dto.endTime());
             reservation.setTotalPrice(dto.totalPrice());
             reservation.setStatus(dto.status());
+            reservation.setNotes(dto.notes());
             reservation.setCreatedAt(LocalDateTime.now());
+            reservation.setUpdatedAt(LocalDateTime.now());
             return reservation;
         }
     }
