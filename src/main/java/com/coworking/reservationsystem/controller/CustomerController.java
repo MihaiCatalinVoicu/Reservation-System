@@ -1,5 +1,7 @@
 package com.coworking.reservationsystem.controller;
 
+import com.coworking.reservationsystem.exception.ResourceNotFoundException;
+import com.coworking.reservationsystem.exception.ValidationException;
 import com.coworking.reservationsystem.model.dto.CustomerDto;
 import com.coworking.reservationsystem.service.CustomerService;
 import jakarta.validation.Valid;
@@ -12,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/customers")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"})
 public class CustomerController {
     
     @Autowired
@@ -23,8 +25,12 @@ public class CustomerController {
      */
     @PostMapping
     public ResponseEntity<CustomerDto> createCustomer(@Valid @RequestBody CustomerDto customerDto) {
-        CustomerDto createdCustomer = customerService.createCustomer(customerDto);
-        return new ResponseEntity<>(createdCustomer, HttpStatus.CREATED);
+        try {
+            CustomerDto createdCustomer = customerService.createCustomer(customerDto);
+            return new ResponseEntity<>(createdCustomer, HttpStatus.CREATED);
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     /**
@@ -32,8 +38,12 @@ public class CustomerController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<CustomerDto> getCustomerById(@PathVariable Long id) {
-        CustomerDto customer = customerService.getCustomerById(id);
-        return ResponseEntity.ok(customer);
+        try {
+            CustomerDto customer = customerService.getCustomerById(id);
+            return ResponseEntity.ok(customer);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
     
     /**
@@ -51,8 +61,14 @@ public class CustomerController {
     @PutMapping("/{id}")
     public ResponseEntity<CustomerDto> updateCustomer(@PathVariable Long id, 
                                                     @Valid @RequestBody CustomerDto customerDto) {
-        CustomerDto updatedCustomer = customerService.updateCustomer(id, customerDto);
-        return ResponseEntity.ok(updatedCustomer);
+        try {
+            CustomerDto updatedCustomer = customerService.updateCustomer(id, customerDto);
+            return ResponseEntity.ok(updatedCustomer);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     /**
@@ -60,8 +76,12 @@ public class CustomerController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
-        customerService.deleteCustomer(id);
-        return ResponseEntity.noContent().build();
+        try {
+            customerService.deleteCustomer(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
     
     /**
@@ -90,8 +110,12 @@ public class CustomerController {
     @GetMapping("/tenant/{tenantId}/phone/{phone}")
     public ResponseEntity<CustomerDto> findByPhone(@PathVariable Long tenantId, 
                                                   @PathVariable String phone) {
-        CustomerDto customer = customerService.findByPhone(tenantId, phone);
-        return ResponseEntity.ok(customer);
+        try {
+            CustomerDto customer = customerService.findByPhone(tenantId, phone);
+            return ResponseEntity.ok(customer);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
     
     /**
@@ -100,8 +124,12 @@ public class CustomerController {
     @GetMapping("/tenant/{tenantId}/email/{email}")
     public ResponseEntity<CustomerDto> findByEmail(@PathVariable Long tenantId, 
                                                   @PathVariable String email) {
-        CustomerDto customer = customerService.findByEmail(tenantId, email);
-        return ResponseEntity.ok(customer);
+        try {
+            CustomerDto customer = customerService.findByEmail(tenantId, email);
+            return ResponseEntity.ok(customer);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
     
     /**

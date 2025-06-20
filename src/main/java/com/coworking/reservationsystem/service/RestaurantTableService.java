@@ -19,9 +19,19 @@ public interface RestaurantTableService {
     Optional<RestaurantTableDto> getTableById(Long id, Long tenantId);
     
     /**
+     * Get table by ID (legacy method)
+     */
+    RestaurantTableDto getTableById(Long id);
+    
+    /**
      * Get all tables for a tenant
      */
     List<RestaurantTableDto> getAllTablesByTenant(Long tenantId);
+    
+    /**
+     * Get all tables (legacy method)
+     */
+    List<RestaurantTableDto> getAllTables();
     
     /**
      * Get all tables for a space
@@ -29,9 +39,19 @@ public interface RestaurantTableService {
     List<RestaurantTableDto> getTablesBySpace(Long spaceId, Long tenantId);
     
     /**
+     * Get all tables for a space (legacy method)
+     */
+    List<RestaurantTableDto> getTablesBySpace(Long spaceId);
+    
+    /**
      * Get all tables by status for a tenant
      */
     List<RestaurantTableDto> getTablesByStatus(RestaurantTable.TableStatus status, Long tenantId);
+    
+    /**
+     * Get all tables by status (legacy method)
+     */
+    List<RestaurantTableDto> getTablesByStatus(RestaurantTable.TableStatus status);
     
     /**
      * Get available tables for a tenant
@@ -39,14 +59,24 @@ public interface RestaurantTableService {
     List<RestaurantTableDto> getAvailableTables(Long tenantId);
     
     /**
+     * Get available tables (legacy method)
+     */
+    List<RestaurantTableDto> getAvailableTables();
+    
+    /**
      * Get available tables with minimum seats for a tenant
      */
     List<RestaurantTableDto> getAvailableTablesByMinSeats(Long tenantId, Integer minSeats);
     
     /**
-     * Update table
+     * Get available tables with minimum seats (legacy method)
      */
-    Optional<RestaurantTableDto> updateTable(Long id, RestaurantTableDto tableDto);
+    List<RestaurantTableDto> getAvailableTablesByMinSeats(Integer minSeats);
+    
+    /**
+     * Update table (legacy method)
+     */
+    RestaurantTableDto updateTable(Long id, RestaurantTableDto tableDto);
     
     /**
      * Update table status
@@ -54,9 +84,19 @@ public interface RestaurantTableService {
     Optional<RestaurantTableDto> updateTableStatus(Long id, RestaurantTable.TableStatus status, Long tenantId);
     
     /**
+     * Update table status (legacy method)
+     */
+    RestaurantTableDto updateTableStatus(Long id, RestaurantTable.TableStatus status);
+    
+    /**
      * Delete table
      */
     boolean deleteTable(Long id, Long tenantId);
+    
+    /**
+     * Delete table (legacy method)
+     */
+    void deleteTable(Long id);
     
     /**
      * Check if table exists by name and tenant ID

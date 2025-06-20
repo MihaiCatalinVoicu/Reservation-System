@@ -143,4 +143,11 @@ public class SpaceServiceImpl implements SpaceService {
                 .map(SpaceDto.Mapper::toDto)
                 .toList();
     }
+
+    @Override
+    public List<SpaceDto> getSpacesByCapacity(Integer capacity) {
+        return spaceRepository.findByCapacity(capacity).stream()
+                .map(SpaceDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
 } 

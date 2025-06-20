@@ -99,32 +99,6 @@ public class RestaurantTableServiceImpl implements RestaurantTableService {
 
     @Override
     @Transactional
-    public Optional<RestaurantTableDto> updateTable(Long id, RestaurantTableDto tableDto) {
-        return tableRepository.findByIdAndTenantId(id, tableDto.tenantId())
-                .map(table -> {
-                    // Validate space exists
-                    Space space = spaceRepository.findById(tableDto.spaceId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Space not found with id: " + tableDto.spaceId()));
-
-                    // Check if name is being changed and if it conflicts with existing table
-                    if (!table.getName().equals(tableDto.name()) &&
-                        tableRepository.existsByNameAndTenantId(tableDto.name(), tableDto.tenantId())) {
-                        throw new ValidationException("Table with name " + tableDto.name() + " already exists for this tenant");
-                    }
-
-                    table.setName(tableDto.name());
-                    table.setNumberOfSeats(tableDto.numberOfSeats());
-                    table.setStatus(tableDto.status());
-                    table.setNotes(tableDto.notes());
-                    table.setSpace(space);
-
-                    RestaurantTable updatedTable = tableRepository.save(table);
-                    return RestaurantTableDto.Mapper.toDto(updatedTable);
-                });
-    }
-
-    @Override
-    @Transactional
     public Optional<RestaurantTableDto> updateTableStatus(Long id, RestaurantTable.TableStatus status, Long tenantId) {
         return tableRepository.findByIdAndTenantId(id, tenantId)
                 .map(table -> {
@@ -161,5 +135,103 @@ public class RestaurantTableServiceImpl implements RestaurantTableService {
     @Transactional(readOnly = true)
     public long getTableCountByStatus(RestaurantTable.TableStatus status, Long tenantId) {
         return tableRepository.countByStatusAndTenantId(status, tenantId);
+    }
+
+    // Legacy methods for backward compatibility
+    @Override
+    @Transactional(readOnly = true)
+    public RestaurantTableDto getTableById(Long id) {
+        RestaurantTable table = tableRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
+        return RestaurantTableDto.Mapper.toDto(table);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTableDto> getAllTables() {
+        return tableRepository.findAll().stream()
+                .map(RestaurantTableDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTableDto> getTablesBySpace(Long spaceId) {
+        if (!spaceRepository.existsById(spaceId)) {
+            throw new ResourceNotFoundException("Space not found with id: " + spaceId);
+        }
+        return tableRepository.findBySpaceIdOrderByName(spaceId).stream()
+                .map(RestaurantTableDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTableDto> getTablesByStatus(RestaurantTable.TableStatus status) {
+        return tableRepository.findByStatusOrderByName(status).stream()
+                .map(RestaurantTableDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTableDto> getAvailableTables() {
+        return tableRepository.findByStatusOrderByName(RestaurantTable.TableStatus.AVAILABLE).stream()
+                .map(RestaurantTableDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RestaurantTableDto> getAvailableTablesByMinSeats(Integer minSeats) {
+        return tableRepository.findAvailableTablesByMinSeats(minSeats).stream()
+                .map(RestaurantTableDto.Mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public RestaurantTableDto updateTable(Long id, RestaurantTableDto tableDto) {
+        RestaurantTable table = tableRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
+
+        // Validate space exists
+        Space space = spaceRepository.findById(tableDto.spaceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Space not found with id: " + tableDto.spaceId()));
+
+        // Check if name is being changed and if it conflicts with existing table
+        if (!table.getName().equals(tableDto.name()) &&
+            tableRepository.existsByNameAndTenantId(tableDto.name(), tableDto.tenantId())) {
+            throw new ValidationException("Table with name " + tableDto.name() + " already exists for this tenant");
+        }
+
+        table.setName(tableDto.name());
+        table.setNumberOfSeats(tableDto.numberOfSeats());
+        table.setStatus(tableDto.status());
+        table.setNotes(tableDto.notes());
+        table.setSpace(space);
+
+        RestaurantTable updatedTable = tableRepository.save(table);
+        return RestaurantTableDto.Mapper.toDto(updatedTable);
+    }
+
+    @Override
+    @Transactional
+    public RestaurantTableDto updateTableStatus(Long id, RestaurantTable.TableStatus status) {
+        RestaurantTable table = tableRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
+        
+        table.setStatus(status);
+        RestaurantTable updatedTable = tableRepository.save(table);
+        return RestaurantTableDto.Mapper.toDto(updatedTable);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTable(Long id) {
+        if (!tableRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Table not found with id: " + id);
+        }
+        tableRepository.deleteById(id);
     }
 } 

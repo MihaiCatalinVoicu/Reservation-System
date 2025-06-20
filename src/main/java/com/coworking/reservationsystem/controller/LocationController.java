@@ -28,8 +28,12 @@ public class LocationController {
 
     @GetMapping("/{id}")
     public ResponseEntity<LocationDto> getLocationById(@PathVariable Long id) {
-        LocationDto location = locationService.getLocationById(id);
-        return ResponseEntity.ok(location);
+        try {
+            LocationDto location = locationService.getLocationById(id);
+            return ResponseEntity.ok(location);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping
@@ -46,13 +50,21 @@ public class LocationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<LocationDto> updateLocation(@PathVariable Long id, @Valid @RequestBody LocationDto locationDto) {
-        LocationDto updatedLocation = locationService.updateLocation(id, locationDto);
-        return ResponseEntity.ok(updatedLocation);
+        try {
+            LocationDto updatedLocation = locationService.updateLocation(id, locationDto);
+            return ResponseEntity.ok(updatedLocation);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
-        locationService.deleteLocation(id);
-        return ResponseEntity.noContent().build();
+        try {
+            locationService.deleteLocation(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

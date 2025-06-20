@@ -11,7 +11,6 @@ import com.coworking.reservationsystem.repository.UserRepository;
 import com.coworking.reservationsystem.service.UserService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,17 +23,16 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public UserDto createUser(UserDto userDto, PasswordDto passwordDto) {
         User user = UserDto.Mapper.toEntity(userDto);
-        user.setPassword(passwordEncoder.encode(passwordDto.password()));
+        user.setPassword(passwordDto.password()); // Store password in plain text since security is disabled
         user.setCreatedAt(LocalDateTime.now());
 
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            user.setRoles(List.of("ROLE_USER"));
+            user.setRoles(List.of("USER"));
         }
 
         // Set tenant if tenantId is provided
@@ -107,11 +105,12 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        if (!passwordEncoder.matches(currentPassword.password(), user.getPassword())) {
+        // Simple password comparison since security is disabled
+        if (!currentPassword.password().equals(user.getPassword())) {
             throw new ValidationException("Current password is incorrect");
         }
 
-        user.setPassword(passwordEncoder.encode(newPassword.password()));
+        user.setPassword(newPassword.password()); // Store new password in plain text
         userRepository.save(user);
     }
 
@@ -128,7 +127,7 @@ public class UserServiceImpl implements UserService {
                     "Test3",
                     "User3",
                     LocalDateTime.now(),
-                    List.of("ROLE_USER"),
+                    List.of("USER"),
                     firstTenant.getId()
             );
             PasswordDto passwordDto = new PasswordDto("Test123!@#");

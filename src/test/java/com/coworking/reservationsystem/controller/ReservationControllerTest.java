@@ -1,6 +1,5 @@
 package com.coworking.reservationsystem.controller;
 
-import com.coworking.reservationsystem.config.TestSecurityConfig;
 import com.coworking.reservationsystem.exception.ResourceNotFoundException;
 import com.coworking.reservationsystem.model.dto.ReservationDto;
 import com.coworking.reservationsystem.model.dto.Status;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,7 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ReservationController.class)
-@Import(TestSecurityConfig.class)
 class ReservationControllerTest {
 
     @Autowired

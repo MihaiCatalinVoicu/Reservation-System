@@ -15,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -34,9 +33,6 @@ class UserServiceTest {
 
     @Mock
     private TenantRepository tenantRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -60,7 +56,7 @@ class UserServiceTest {
                 "John",
                 "Doe",
                 LocalDateTime.now(),
-                Arrays.asList("ROLE_USER"),
+                Arrays.asList("USER"),
                 1L // tenantId
         );
 
@@ -70,8 +66,8 @@ class UserServiceTest {
         validUser.setFirstName("John");
         validUser.setLastName("Doe");
         validUser.setCreatedAt(LocalDateTime.now());
-        validUser.setPassword("encodedPassword");
-        validUser.setRoles(Arrays.asList("ROLE_USER"));
+        validUser.setPassword("Test123!@#"); // Plain text password
+        validUser.setRoles(Arrays.asList("USER"));
         validUser.setTenant(validTenant);
 
         validPasswordDto = new PasswordDto("Test123!@#");
@@ -81,7 +77,6 @@ class UserServiceTest {
     void createUser_Success() {
         // Given
         when(tenantRepository.findById(1L)).thenReturn(Optional.of(validTenant));
-        when(passwordEncoder.encode(validPasswordDto.password())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(validUser);
 
         // When
@@ -95,7 +90,6 @@ class UserServiceTest {
         assertEquals(validUserDto.tenantId(), result.tenantId());
 
         verify(tenantRepository).findById(1L);
-        verify(passwordEncoder).encode(validPasswordDto.password());
         verify(userRepository).save(any(User.class));
     }
 
@@ -108,11 +102,10 @@ class UserServiceTest {
                 "John",
                 "Doe",
                 LocalDateTime.now(),
-                Arrays.asList("ROLE_USER"),
+                Arrays.asList("USER"),
                 null // no tenantId
         );
 
-        when(passwordEncoder.encode(validPasswordDto.password())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(validUser);
 
         // When
@@ -123,7 +116,6 @@ class UserServiceTest {
         assertEquals(userDtoWithoutTenant.email(), result.email());
 
         verify(tenantRepository, never()).findById(any());
-        verify(passwordEncoder).encode(validPasswordDto.password());
         verify(userRepository).save(any(User.class));
     }
 
@@ -138,7 +130,7 @@ class UserServiceTest {
                 "John",
                 "Doe",
                 LocalDateTime.now(),
-                Arrays.asList("ROLE_USER"),
+                Arrays.asList("USER"),
                 999L // invalid tenantId
         );
 
@@ -165,7 +157,6 @@ class UserServiceTest {
         );
 
         when(tenantRepository.findById(1L)).thenReturn(Optional.of(validTenant));
-        when(passwordEncoder.encode(validPasswordDto.password())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(validUser);
 
         // When
@@ -267,7 +258,7 @@ class UserServiceTest {
                 "John Updated",
                 "Doe Updated",
                 LocalDateTime.now(),
-                Arrays.asList("ROLE_ADMIN"),
+                Arrays.asList("ADMIN"),
                 1L
         );
 
@@ -308,7 +299,7 @@ class UserServiceTest {
                 "John Updated",
                 "Doe Updated",
                 LocalDateTime.now(),
-                Arrays.asList("ROLE_ADMIN"),
+                Arrays.asList("ADMIN"),
                 999L // invalid tenant
         );
 
@@ -355,12 +346,10 @@ class UserServiceTest {
     @Test
     void changePassword_Success() {
         // Given
-        PasswordDto currentPassword = new PasswordDto("CurrentPass123!@#");
+        PasswordDto currentPassword = new PasswordDto("Test123!@#");
         PasswordDto newPassword = new PasswordDto("NewPass123!@#");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(validUser));
-        when(passwordEncoder.matches(currentPassword.password(), "encodedPassword")).thenReturn(true);
-        when(passwordEncoder.encode(newPassword.password())).thenReturn("newEncodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(validUser);
 
         // When
@@ -368,8 +357,6 @@ class UserServiceTest {
 
         // Then
         verify(userRepository).findById(1L);
-        verify(passwordEncoder).matches(currentPassword.password(), "encodedPassword");
-        verify(passwordEncoder).encode(newPassword.password());
         verify(userRepository).save(any(User.class));
     }
 
@@ -387,7 +374,6 @@ class UserServiceTest {
         assertEquals("User not found with id: 999", exception.getMessage());
 
         verify(userRepository).findById(999L);
-        verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -398,7 +384,6 @@ class UserServiceTest {
         PasswordDto newPassword = new PasswordDto("NewPass123!@#");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(validUser));
-        when(passwordEncoder.matches(currentPassword.password(), "encodedPassword")).thenReturn(false);
 
         // When & Then
         ValidationException exception = assertThrows(ValidationException.class,
@@ -406,8 +391,6 @@ class UserServiceTest {
         assertEquals("Current password is incorrect", exception.getMessage());
 
         verify(userRepository).findById(1L);
-        verify(passwordEncoder).matches(currentPassword.password(), "encodedPassword");
-        verify(passwordEncoder, never()).encode(any());
         verify(userRepository, never()).save(any(User.class));
     }
 } 

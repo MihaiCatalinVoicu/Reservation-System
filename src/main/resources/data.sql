@@ -32,13 +32,13 @@ VALUES
 (5, 'Terasă 1', 4, 'AVAILABLE', 3, 1, 'Masă pe terasă cu vedere', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 (6, 'Terasă 2', 6, 'RESERVED', 3, 1, 'Masă pe terasă', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Sample Users (passwords are BCrypt hashed 'Password123!')
+-- Sample Users (plain text passwords for simplicity)
 INSERT INTO users (id, email, first_name, last_name, password, tenant_id, created_at) 
 VALUES 
-(1, 'admin@central.ro', 'Admin', 'Central', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, CURRENT_TIMESTAMP),
-(2, 'manager@central.ro', 'Manager', 'Central', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, CURRENT_TIMESTAMP),
-(3, 'admin@palace.ro', 'Admin', 'Palace', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, CURRENT_TIMESTAMP),
-(4, 'manager@palace.ro', 'Manager', 'Palace', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, CURRENT_TIMESTAMP);
+(1, 'admin@central.ro', 'Admin', 'Central', 'Password123!', 1, CURRENT_TIMESTAMP),
+(2, 'manager@central.ro', 'Manager', 'Central', 'Password123!', 1, CURRENT_TIMESTAMP),
+(3, 'admin@palace.ro', 'Admin', 'Palace', 'Password123!', 2, CURRENT_TIMESTAMP),
+(4, 'manager@palace.ro', 'Manager', 'Palace', 'Password123!', 2, CURRENT_TIMESTAMP);
 
 -- Sample User Roles
 INSERT INTO user_roles (user_id, roles) 
@@ -65,16 +65,4 @@ INSERT INTO table_reservations (id, table_id, customer_id, number_of_people, req
 VALUES 
 (1, 1, 3, 4, '2024-03-20 19:00:00', '2024-03-20 19:15:00', 'CONFIRMED', 'Masă lângă fereastră dacă este posibil', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 (2, 6, 1, 6, '2024-03-21 20:00:00', '2024-03-21 20:30:00', 'PENDING', 'Sărbătoare de naștere', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(3, 3, 4, 2, '2024-03-20 18:30:00', '2024-03-20 18:45:00', 'COMPLETED', 'Fără fructe de mare în meniu', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
--- Sample Refresh Tokens (for testing purposes)
-INSERT INTO refresh_tokens (id, token, expires_at, created_at, revoked, user_id, user_agent, ip_address) 
-VALUES 
-(1, 'test-refresh-token-1', DATEADD('DAY', 7, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP, false, 1, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', '127.0.0.1'),
-(2, 'test-refresh-token-2', DATEADD('DAY', 7, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP, false, 2, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36', '192.168.1.100');
-
--- Sample Blacklisted Tokens (for testing purposes)
-INSERT INTO blacklisted_tokens (id, token, blacklisted_at, expires_at, user_id, reason) 
-VALUES 
-(1, 'expired-access-token-1', DATEADD('HOUR', -2, CURRENT_TIMESTAMP), DATEADD('HOUR', 1, CURRENT_TIMESTAMP), 1, 'LOGOUT'),
-(2, 'expired-access-token-2', DATEADD('HOUR', -1, CURRENT_TIMESTAMP), DATEADD('HOUR', 1, CURRENT_TIMESTAMP), 2, 'SECURITY_BREACH'); 
+(3, 3, 4, 2, '2024-03-20 18:30:00', '2024-03-20 18:45:00', 'COMPLETED', 'Fără fructe de mare în meniu', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); 

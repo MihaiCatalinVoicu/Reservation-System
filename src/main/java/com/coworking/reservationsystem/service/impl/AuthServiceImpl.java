@@ -1,129 +1,90 @@
 package com.coworking.reservationsystem.service.impl;
 
-import com.coworking.reservationsystem.exception.ResourceNotFoundException;
-import com.coworking.reservationsystem.exception.ValidationException;
-import com.coworking.reservationsystem.model.dto.*;
-import com.coworking.reservationsystem.model.entity.RefreshToken;
+import com.coworking.reservationsystem.model.dto.LoginRequest;
+import com.coworking.reservationsystem.model.dto.LoginResponse;
+import com.coworking.reservationsystem.model.dto.RegisterRequest;
+import com.coworking.reservationsystem.model.dto.UserDto;
 import com.coworking.reservationsystem.model.entity.User;
 import com.coworking.reservationsystem.repository.UserRepository;
 import com.coworking.reservationsystem.service.AuthService;
-import com.coworking.reservationsystem.service.TokenService;
-import com.coworking.reservationsystem.util.JwtUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
+
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
-    private final TokenService tokenService;
-    private final HttpServletRequest request;
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        User user = userRepository.findByEmail(loginRequest.email())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        log.info("Login attempt for email: {}", loginRequest.email());
         
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", user.getRoles());
-        claims.put("tenantId", user.getTenant().getId());
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), claims);
-        
-        // Create persistent refresh token
-        String userAgent = request.getHeader("User-Agent");
-        String ipAddress = getClientIpAddress();
-        RefreshToken refreshTokenEntity = tokenService.createRefreshToken(user, userAgent, ipAddress);
-        
-        return new LoginResponse(accessToken, refreshTokenEntity.getToken(), UserDto.fromEntity(user));
+        try {
+            // Trim email to remove leading/trailing spaces
+            String trimmedEmail = loginRequest.email().trim();
+            
+            Optional<User> userOpt = userRepository.findByEmail(trimmedEmail);
+            
+            if (userOpt.isEmpty()) {
+                log.warn("Login failed: User not found for email: {}", trimmedEmail);
+                throw new RuntimeException("Invalid credentials");
+            }
+            
+            User user = userOpt.get();
+            
+            // Simple password validation (plain text comparison since security is disabled)
+            if (!user.getPassword().equals(loginRequest.password())) {
+                log.warn("Login failed: Invalid password for email: {}", trimmedEmail);
+                throw new RuntimeException("Invalid credentials");
+            }
+            
+            log.info("Login successful for user: {}", user.getEmail());
+            
+            // Return dummy tokens since security is disabled
+            return new LoginResponse(
+                    "dummy-access-token-" + System.currentTimeMillis(),
+                    "dummy-refresh-token-" + System.currentTimeMillis(),
+                    UserDto.fromEntity(user)
+            );
+            
+        } catch (Exception e) {
+            log.error("Login error for email {}: {}", loginRequest.email(), e.getMessage());
+            throw e;
+        }
     }
 
     @Override
     public UserDto register(RegisterRequest registerRequest) {
-        if (userRepository.existsByEmail(registerRequest.email())) {
-            throw new ValidationException("Email already in use");
+        log.info("Registration attempt for email: {}", registerRequest.email());
+        
+        // Check if user already exists
+        if (userRepository.findByEmail(registerRequest.email()).isPresent()) {
+            throw new RuntimeException("User already exists with this email");
         }
+        
+        // Create new user (password stored in plain text since security is disabled)
         User user = new User();
+        user.setEmail(registerRequest.email());
+        user.setPassword(registerRequest.password()); // Plain text storage
         user.setFirstName(registerRequest.firstName());
         user.setLastName(registerRequest.lastName());
-        user.setEmail(registerRequest.email());
-        user.setPassword(passwordEncoder.encode(registerRequest.password()));
-        user.setRoles(Collections.singletonList("CLIENT"));
-        user.setCreatedAt(java.time.LocalDateTime.now());
-        // Set tenant (should be fetched from TenantRepository, simplified here)
-        user.setTenant(null); // TODO: set actual tenant
-        userRepository.save(user);
-        return UserDto.fromEntity(user);
-    }
-
-    @Override
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
-        String refreshToken = refreshTokenRequest.refreshToken();
+        user.setRoles(Arrays.asList("USER")); // Set default role
+        user.setCreatedAt(LocalDateTime.now());
         
-        // Verify refresh token from persistent storage
-        RefreshToken refreshTokenEntity = tokenService.verifyRefreshToken(refreshToken);
-        User user = refreshTokenEntity.getUser();
+        // Set default tenant (you might want to adjust this based on your business logic)
+        // For now, we'll need to handle tenant assignment differently
         
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", user.getRoles());
-        claims.put("tenantId", user.getTenant().getId());
+        User savedUser = userRepository.save(user);
         
-        String newAccessToken = jwtUtil.generateAccessToken(user.getEmail(), claims);
+        log.info("User registered successfully: {}", savedUser.getEmail());
         
-        // Create new refresh token and revoke old one
-        String userAgent = request.getHeader("User-Agent");
-        String ipAddress = getClientIpAddress();
-        RefreshToken newRefreshTokenEntity = tokenService.createRefreshToken(user, userAgent, ipAddress);
-        tokenService.revokeRefreshToken(refreshToken);
-        
-        return new RefreshTokenResponse(newAccessToken, newRefreshTokenEntity.getToken());
-    }
-
-    @Override
-    public void logout(String refreshToken) {
-        // Revoke refresh token
-        tokenService.revokeRefreshToken(refreshToken);
-        
-        // Blacklist the current access token if available
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String accessToken = authHeader.substring(7);
-            try {
-                String username = jwtUtil.extractUsername(accessToken);
-                User user = userRepository.findByEmail(username)
-                        .orElse(null);
-                if (user != null) {
-                    tokenService.blacklistToken(accessToken, user.getId(), "LOGOUT");
-                }
-            } catch (Exception e) {
-                // Token might be invalid, ignore
-            }
-        }
-    }
-    
-    private String getClientIpAddress() {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
-            return xForwardedFor.split(",")[0];
-        }
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
-            return xRealIp;
-        }
-        return request.getRemoteAddr();
+        return UserDto.fromEntity(savedUser);
     }
 } 

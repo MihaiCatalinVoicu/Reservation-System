@@ -8,14 +8,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/tables")
+@RequestMapping("/api/v1/restaurant-tables")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@Tag(name = "Restaurant Tables", description = "Restaurant table management APIs")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"})
 public class RestaurantTableController {
 
     private final RestaurantTableService tableService;
@@ -27,62 +28,76 @@ public class RestaurantTableController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RestaurantTableDto> getTableById(@PathVariable Long id, @RequestParam Long tenantId) {
-        Optional<RestaurantTableDto> table = tableService.getTableById(id, tenantId);
-        return table.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<RestaurantTableDto> getTableById(@PathVariable Long id) {
+        try {
+            RestaurantTableDto table = tableService.getTableById(id);
+            return ResponseEntity.ok(table);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping
-    public ResponseEntity<List<RestaurantTableDto>> getAllTables(@RequestParam Long tenantId) {
+    public ResponseEntity<List<RestaurantTableDto>> getAllTables() {
+        List<RestaurantTableDto> tables = tableService.getAllTables();
+        return ResponseEntity.ok(tables);
+    }
+
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<List<RestaurantTableDto>> getAllTablesByTenant(@PathVariable Long tenantId) {
         List<RestaurantTableDto> tables = tableService.getAllTablesByTenant(tenantId);
         return ResponseEntity.ok(tables);
     }
 
     @GetMapping("/space/{spaceId}")
-    public ResponseEntity<List<RestaurantTableDto>> getTablesBySpace(@PathVariable Long spaceId, @RequestParam Long tenantId) {
-        List<RestaurantTableDto> tables = tableService.getTablesBySpace(spaceId, tenantId);
+    public ResponseEntity<List<RestaurantTableDto>> getTablesBySpace(@PathVariable Long spaceId) {
+        List<RestaurantTableDto> tables = tableService.getTablesBySpace(spaceId);
         return ResponseEntity.ok(tables);
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<RestaurantTableDto>> getTablesByStatus(@PathVariable RestaurantTable.TableStatus status, @RequestParam Long tenantId) {
-        List<RestaurantTableDto> tables = tableService.getTablesByStatus(status, tenantId);
+    public ResponseEntity<List<RestaurantTableDto>> getTablesByStatus(@PathVariable RestaurantTable.TableStatus status) {
+        List<RestaurantTableDto> tables = tableService.getTablesByStatus(status);
         return ResponseEntity.ok(tables);
     }
 
     @GetMapping("/available")
-    public ResponseEntity<List<RestaurantTableDto>> getAvailableTables(@RequestParam Long tenantId) {
-        List<RestaurantTableDto> tables = tableService.getAvailableTables(tenantId);
+    public ResponseEntity<List<RestaurantTableDto>> getAvailableTables() {
+        List<RestaurantTableDto> tables = tableService.getAvailableTables();
         return ResponseEntity.ok(tables);
     }
 
     @GetMapping("/available/min-seats/{minSeats}")
-    public ResponseEntity<List<RestaurantTableDto>> getAvailableTablesByMinSeats(@PathVariable Integer minSeats, @RequestParam Long tenantId) {
-        List<RestaurantTableDto> tables = tableService.getAvailableTablesByMinSeats(tenantId, minSeats);
+    public ResponseEntity<List<RestaurantTableDto>> getAvailableTablesByMinSeats(@PathVariable Integer minSeats) {
+        List<RestaurantTableDto> tables = tableService.getAvailableTablesByMinSeats(minSeats);
         return ResponseEntity.ok(tables);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RestaurantTableDto> updateTable(@PathVariable Long id, @Valid @RequestBody RestaurantTableDto tableDto) {
-        return tableService.updateTable(id, tableDto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            RestaurantTableDto updatedTable = tableService.updateTable(id, tableDto);
+            return ResponseEntity.ok(updatedTable);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{id}/status")
     public ResponseEntity<RestaurantTableDto> updateTableStatus(@PathVariable Long id, 
-                                                               @RequestParam RestaurantTable.TableStatus status, 
-                                                               @RequestParam Long tenantId) {
-        return tableService.updateTableStatus(id, status, tenantId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                                                               @RequestParam RestaurantTable.TableStatus status) {
+        try {
+            RestaurantTableDto updatedTable = tableService.updateTableStatus(id, status);
+            return ResponseEntity.ok(updatedTable);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTable(@PathVariable Long id, @RequestParam Long tenantId) {
-        boolean deleted = tableService.deleteTable(id, tenantId);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deleteTable(@PathVariable Long id) {
+        tableService.deleteTable(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/exists")

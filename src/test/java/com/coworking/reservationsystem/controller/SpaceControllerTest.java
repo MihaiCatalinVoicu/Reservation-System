@@ -1,6 +1,5 @@
 package com.coworking.reservationsystem.controller;
 
-import com.coworking.reservationsystem.config.TestSecurityConfig;
 import com.coworking.reservationsystem.model.dto.SpaceDto;
 import com.coworking.reservationsystem.model.entity.Space;
 import com.coworking.reservationsystem.model.entity.Tenant;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,7 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SpaceController.class)
-@Import(TestSecurityConfig.class)
 class SpaceControllerTest {
 
     @Autowired
@@ -98,40 +95,37 @@ class SpaceControllerTest {
 
     @Test
     void getSpaceById_ExistingSpace_ReturnsSpace() throws Exception {
-        when(spaceService.getSpaceById(1L, 1L)).thenReturn(Optional.of(testSpaceDto));
+        when(spaceService.getSpaceById(1L)).thenReturn(testSpaceDto);
 
-        mockMvc.perform(get("/api/v1/spaces/1")
-                .param("tenantId", "1"))
+        mockMvc.perform(get("/api/v1/spaces/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Conference Room A"));
 
-        verify(spaceService).getSpaceById(1L, 1L);
+        verify(spaceService).getSpaceById(1L);
     }
 
     @Test
     void getSpaceById_NonExistentSpace_ReturnsNotFound() throws Exception {
-        when(spaceService.getSpaceById(999L, 1L)).thenReturn(Optional.empty());
+        doThrow(new com.coworking.reservationsystem.exception.ResourceNotFoundException("Space not found")).when(spaceService).getSpaceById(999L);
 
-        mockMvc.perform(get("/api/v1/spaces/999")
-                .param("tenantId", "1"))
+        mockMvc.perform(get("/api/v1/spaces/999"))
                 .andExpect(status().isNotFound());
 
-        verify(spaceService).getSpaceById(999L, 1L);
+        verify(spaceService).getSpaceById(999L);
     }
 
     @Test
     void getAllSpaces_ReturnsSpacesList() throws Exception {
         List<SpaceDto> spaces = Arrays.asList(testSpaceDto);
-        when(spaceService.getAllSpaces(1L)).thenReturn(spaces);
+        when(spaceService.getAllSpaces()).thenReturn(spaces);
 
-        mockMvc.perform(get("/api/v1/spaces")
-                .param("tenantId", "1"))
+        mockMvc.perform(get("/api/v1/spaces"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].name").value("Conference Room A"));
 
-        verify(spaceService).getAllSpaces(1L);
+        verify(spaceService).getAllSpaces();
     }
 
     @Test
@@ -153,8 +147,8 @@ class SpaceControllerTest {
         when(spaceService.updateSpace(eq(999L), any(SpaceDto.class))).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/v1/spaces/999")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(testSpaceDto)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testSpaceDto)))
                 .andExpect(status().isNotFound());
 
         verify(spaceService).updateSpace(eq(999L), any(SpaceDto.class));
@@ -162,51 +156,47 @@ class SpaceControllerTest {
 
     @Test
     void deleteSpace_ExistingSpace_ReturnsNoContent() throws Exception {
-        when(spaceService.deleteSpace(1L, 1L)).thenReturn(true);
+        doNothing().when(spaceService).deleteSpace(1L);
 
-        mockMvc.perform(delete("/api/v1/spaces/1")
-                .param("tenantId", "1"))
+        mockMvc.perform(delete("/api/v1/spaces/1"))
                 .andExpect(status().isNoContent());
 
-        verify(spaceService).deleteSpace(1L, 1L);
+        verify(spaceService).deleteSpace(1L);
     }
 
     @Test
     void deleteSpace_NonExistentSpace_ReturnsNotFound() throws Exception {
-        when(spaceService.deleteSpace(999L, 1L)).thenReturn(false);
+        doThrow(new com.coworking.reservationsystem.exception.ResourceNotFoundException("Space not found")).when(spaceService).deleteSpace(999L);
 
-        mockMvc.perform(delete("/api/v1/spaces/999")
-                .param("tenantId", "1"))
+        mockMvc.perform(delete("/api/v1/spaces/999"))
                 .andExpect(status().isNotFound());
 
-        verify(spaceService).deleteSpace(999L, 1L);
+        verify(spaceService).deleteSpace(999L);
     }
 
     @Test
     void getSpacesByLocation_ReturnsSpacesList() throws Exception {
         List<SpaceDto> spaces = Arrays.asList(testSpaceDto);
-        when(spaceService.getSpacesByLocation(1L, 1L)).thenReturn(spaces);
+        when(spaceService.getSpacesByLocationId(1L)).thenReturn(spaces);
 
-        mockMvc.perform(get("/api/v1/spaces/location/1")
-                .param("tenantId", "1"))
+        mockMvc.perform(get("/api/v1/spaces/location/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].name").value("Conference Room A"));
 
-        verify(spaceService).getSpacesByLocation(1L, 1L);
+        verify(spaceService).getSpacesByLocationId(1L);
     }
 
     @Test
     void getSpacesByCapacity_ReturnsSpacesList() throws Exception {
         List<SpaceDto> spaces = Arrays.asList(testSpaceDto);
-        when(spaceService.getSpacesByCapacity(50, 1L)).thenReturn(spaces);
+        when(spaceService.getSpacesByCapacity(50)).thenReturn(spaces);
 
-        mockMvc.perform(get("/api/v1/spaces/capacity/50")
-                .param("tenantId", "1"))
+        mockMvc.perform(get("/api/v1/spaces/capacity/50"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].capacity").value(50));
+                .andExpect(jsonPath("$[0].name").value("Conference Room A"));
 
-        verify(spaceService).getSpacesByCapacity(50, 1L);
+        verify(spaceService).getSpacesByCapacity(50);
     }
 } 

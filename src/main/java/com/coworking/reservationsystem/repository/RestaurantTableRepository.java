@@ -62,4 +62,15 @@ public interface RestaurantTableRepository extends JpaRepository<RestaurantTable
      * Count tables by status and tenant ID
      */
     long countByStatusAndTenantId(RestaurantTable.TableStatus status, Long tenantId);
+    
+    /**
+     * Find all tables by status (legacy method)
+     */
+    List<RestaurantTable> findByStatusOrderByName(RestaurantTable.TableStatus status);
+    
+    /**
+     * Find available tables by minimum seats (legacy method)
+     */
+    @Query("SELECT t FROM RestaurantTable t WHERE t.numberOfSeats >= :minSeats AND t.status = 'AVAILABLE' ORDER BY t.numberOfSeats ASC")
+    List<RestaurantTable> findAvailableTablesByMinSeats(@Param("minSeats") Integer minSeats);
 } 

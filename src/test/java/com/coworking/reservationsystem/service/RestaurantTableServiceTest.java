@@ -214,7 +214,7 @@ class RestaurantTableServiceTest {
 
     @Test
     void updateTable_ValidTable_ReturnsUpdatedTable() {
-        when(tableRepository.findByIdAndTenantId(1L, 1L)).thenReturn(Optional.of(testTable));
+        when(tableRepository.findById(1L)).thenReturn(Optional.of(testTable));
         when(spaceRepository.findById(1L)).thenReturn(Optional.of(testSpace));
         when(tableRepository.existsByNameAndTenantId("Updated Table", 1L)).thenReturn(false);
         when(tableRepository.save(any(RestaurantTable.class))).thenReturn(testTable);
@@ -231,19 +231,19 @@ class RestaurantTableServiceTest {
                 LocalDateTime.now()
         );
 
-        Optional<RestaurantTableDto> result = tableService.updateTable(1L, updateDto);
+        RestaurantTableDto result = tableService.updateTable(1L, updateDto);
 
-        assertTrue(result.isPresent());
+        assertNotNull(result);
         verify(tableRepository).save(any(RestaurantTable.class));
     }
 
     @Test
-    void updateTable_NonExistentTable_ReturnsEmpty() {
-        when(tableRepository.findByIdAndTenantId(1L, 1L)).thenReturn(Optional.empty());
+    void updateTable_NonExistentTable_ThrowsResourceNotFoundException() {
+        when(tableRepository.findById(1L)).thenReturn(Optional.empty());
 
-        Optional<RestaurantTableDto> result = tableService.updateTable(1L, testTableDto);
-
-        assertFalse(result.isPresent());
+        assertThrows(ResourceNotFoundException.class, () -> {
+            tableService.updateTable(1L, testTableDto);
+        });
         verify(tableRepository, never()).save(any());
     }
 

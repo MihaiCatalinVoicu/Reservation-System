@@ -19,5 +19,6 @@ public interface SpaceService {
     List<SpaceDto> getAllSpaces();
     List<SpaceDto> getSpacesByLocationId(Long locationId);
     List<SpaceDto> getSpacesByTenantId(Long tenantId);
+    List<SpaceDto> getSpacesByCapacity(Integer capacity);
     void deleteSpace(Long id);
 }

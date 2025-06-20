@@ -54,4 +54,8 @@ public class Space {
     @OneToMany(mappedBy = "space", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Availability> availabilities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "space", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<RestaurantTable> restaurantTables = new ArrayList<>();
 }
